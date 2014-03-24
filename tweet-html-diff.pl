@@ -19,10 +19,14 @@ die "download failed" unless $tx->success;
 
 my @news;
 my %seen;
+my $order = 0;
 for my $e ($tx->res->dom->find($selector)->each) {
     my $text_content = $e->all_text;
     my $digest = sha1_hex( encode_utf8($text_content) );
-    $seen{$digest} = $text_content;
+    $seen{$digest} = {
+        order => $order++,
+        body => $text_content,
+    };
 }
 
 my $dbh = DBI->connect("dbi:SQLite:dbname=$dbpath", "", "");
@@ -34,12 +38,13 @@ for my $sha1 (keys %seen) {
         $dbh->do("UPDATE seen SET `last_seen` = $SQL_NOW WHERE `sha1` = ?", {}, $sha1);
     }
     else {
-        push @news, $seen{$sha1};
-        $dbh->do("INSERT INTO seen(`sha1`,`body`,`first_seen`) VALUES(?,?, $SQL_NOW)", {}, $sha1, $seen{$sha1});
+        push @news, $sha1;
+        $dbh->do("INSERT INTO seen(`sha1`,`body`,`first_seen`) VALUES(?,?, $SQL_NOW)", {}, $sha1, $seen{$sha1}->{body});
     }
 }
 $dbh->commit;
 
+@news = map { $seen{$_}->{body} } sort { $seen{$b}->{order} <=> $seen{$a}->{order} } @news;
 binmode STDOUT, ":utf8";
 for (@news) {
     print "$_\n\n";
@@ -63,15 +68,57 @@ if (-f $twitter_secret_file) {
     );
 
     for my $text (@news) {
-        eval {
-            $nt->update( $text . $hashtag );
-            sleep 3;
-            say ">>> $text";
-            1;
-        } or do {
-            say "ERROR: $@";
-            say "!!! $text";
-        };
+        if ( length($text) < 120 ) {
+            eval {
+                $nt->update( $text . $hashtag );
+                say ">>> $text";
+                sleep 3;
+                1;
+            } or do {
+                say "ERROR: $@";
+                say "!!! $text";
+            };
+        }
+        else {
+            my @pieces = split /(\P{Letter})/, $text;
+            my @subtext;
+            my $subtext = "";
+            while(@pieces) {
+                my $t = shift @pieces;
+
+                if ( length($subtext) + length($t) > 100 ) {
+                    if ($t =~ /^\P{Letter}/) {
+                        push @subtext, $subtext . $t;
+                        $subtext = "";
+                    } else {
+                        push @subtext, $subtext;
+                        $subtext = $t;
+                    }
+                } else {
+                    $subtext .= $t;
+                }
+            }
+            push @subtext, $subtext;
+
+            for my $i (0..$#subtext) {
+                my $pre = ($i > 0) ? "..." : "";
+                my $post = ($i < $#subtext) ? "..." : "";
+                my $tweet = "$pre $subtext[$i] $post $hashtag";
+
+                eval {
+                    $nt->update( $tweet );
+                    say ">>> $tweet";
+                    sleep 3;
+                    1;
+                } or do {
+                    say "ERROR: $@";
+                    say "!!! $text";
+                };
+            }
+        }
+
+        1;
+
     }
 }
 
