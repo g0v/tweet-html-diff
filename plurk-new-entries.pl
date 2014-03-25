@@ -22,7 +22,6 @@ sub login {
             my $headers = $tx->req->headers;
             $headers->remove("Accept-Encoding");
             $headers->header("User-Agent", "Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A543 Safari/419.3");
-            sleep 1;
         }
     );
 
@@ -93,6 +92,7 @@ sub post {
             qualifier => ":",
             content => $text,
         });
+        sleep 2;
         die "failed 6" unless $tx->success;
     }
 
@@ -114,7 +114,7 @@ my $SQL_NOW = q{ strftime('%Y-%m-%dT%H:%M:%SZ', 'now') };
 my $dbh = DBI->connect("dbi:SQLite:dbname=$dbpath", "", "");
 my $row = $dbh->selectrow_arrayref("select finished FROM runlog WHERE program = ?", {}, basename($0));
 if ($row) {
-    my $rows = $dbh->selectall_arrayref("select body FROM seen WHERE last_seen is NULL OR last_seen > ? ORDER BY first_seen ASC", {}, $row->[0]);
+    my $rows = $dbh->selectall_arrayref("select body FROM seen WHERE last_seen is NULL OR first_seen > ? ORDER BY first_seen ASC", {}, $row->[0]);
     for (@$rows) {
         my $body = Encode::decode_utf8($_->[0]);
         push @news, $body;
@@ -143,5 +143,6 @@ if (@news) {
         my $text = pop @news;
         my $id = $bot->post($text);
         say "DEBUG: plurk id = $id";
+        sleep 2;
     }
 }
