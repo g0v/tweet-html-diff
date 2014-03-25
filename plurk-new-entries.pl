@@ -105,6 +105,7 @@ use Encode ();
 use DBI;
 
 @ARGV == 2 or die;
+binmode STDOUT, ":utf8";
 
 my ($dbpath, $plurk_secret) = @ARGV;
 my @news;
