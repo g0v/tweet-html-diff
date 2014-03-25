@@ -20,6 +20,7 @@ sub login {
         sub {
             my ($ua, $tx) = @_;
             my $headers = $tx->req->headers;
+            $headers->remove("Accept-Encoding");
             $headers->header("User-Agent", "Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A543 Safari/419.3");
             sleep 1;
         }
@@ -57,12 +58,12 @@ sub post {
     my $text = shift @content;
     $text .= " $self->{hashtag}" if $self->{hashtag};
 
-    my $tx = $ua->get('https://www.plurk.com/m/');
+    my $tx = $ua->get('http://www.plurk.com/m/');
     die "failed 3" unless $tx->success;
 
     my $user_id = $tx->res->dom("input[name=user_id]")->attr("value");
 
-    $tx = $ua->post('https://www.plurk.com/m/' => form => {
+    $tx = $ua->post('http://www.plurk.com/m/' => form => {
         user_id => $user_id,
         language => "en",
         qualifier => ":",
@@ -71,12 +72,12 @@ sub post {
     die "failed 4" unless $tx->success;
     say ">>> $text";
 
-    $tx = $ua->get('https://www.plurk.com/m/?mode=my');
+    $tx = $ua->get('http://www.plurk.com/m/?mode=my');
     die "failed 5" unless $tx->success;
 
     my $link_to_plurk = $tx->res->dom->find("div.plurk a.r")->[0];
     my ($plurk_id) = $link_to_plurk->attr("href") =~ m{/m/p/(.+)$};
-    my $plurk_permaurl = "https://www.plurk.com/" . $link_to_plurk->attr("href");
+    my $plurk_permaurl = "http://www.plurk.com/" . $link_to_plurk->attr("href");
 
     say "DEBUG: plurk = $plurk_permaurl";
     while (@content) {
