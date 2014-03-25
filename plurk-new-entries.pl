@@ -145,4 +145,7 @@ if (@news) {
         say "DEBUG: plurk id = $id";
         sleep 2;
     }
+    say "======= ALL POSTED";
+} else {
+    say "======= NOTHING TO POST";
 }
