@@ -123,6 +123,8 @@ if ($row) {
 $dbh->do("UPDATE runlog SET `finished` = $SQL_NOW WHERE `program` = ?", {}, basename($0));
 
 if (@news) {
+    say "DEBUG: " . scalar(@news) . " new entries to plurk";
+
     open my $fh, "<", $plurk_secret;
     my ($user, $pass, $hashtag);
     chomp($user = <$fh>);
@@ -136,7 +138,6 @@ if (@news) {
     );
     $bot->login;
 
-    say "DEBUG: " . scalar(@news) . " new entries to plurk";
     while (@news) {
         my $text = pop @news;
         my $id = $bot->post($text);
