@@ -48,5 +48,6 @@ CREATE TABLE seen (`sha1` VARCHAR(40), `body` TEXT, `first_seen` DATETIME, `last
 
 CREATE TABLE runlog (`program` VARCHAR(80), `finished` DATETIME, PRIMARY KEY (`program`));
 INSERT INTO runlog(`program`) VALUES('collect-html-diff.pl');
+INSERT INTO runlog(`program`) VALUES('plurk-new-entries.pl');
 
 perl collect-html-diff.pl congress-text-live.sqlite3 http://congress-text-live.herokuapp.com/ 'section.entry'
