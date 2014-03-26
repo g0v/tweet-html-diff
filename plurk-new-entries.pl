@@ -130,12 +130,12 @@ my $dbh = DBI->connect("dbi:SQLite:dbname=$dbpath", "", "");
 my $row = $dbh->selectrow_arrayref("select finished FROM runlog WHERE program = ?", {}, $program_name);
 if ($row) {
     say "DEBUG: Last run was finished at $row->[0]";
-    my $rows = $dbh->selectall_arrayref("select body FROM seen WHERE last_seen is NULL OR first_seen > ? ORDER BY first_seen ASC, `order` DESC", {}, $row->[0]);
+    my $rows = $dbh->selectall_arrayref("select body FROM seen WHERE first_seen > ? ORDER BY first_seen ASC, `order` DESC", {}, $row->[0]);
     for (@$rows) {
         my $body = Encode::decode_utf8($_->[0]);
         my $prefix = substr($body, 0, 40) . '%';
 
-        my $similar_stuff = $dbh->selectrow_arrayref("SELECT count(sha1) FORM seen WHERE body like ?", {}, $prefix);
+        my $similar_stuff = $dbh->selectrow_arrayref("SELECT count(sha1) FROM seen WHERE body like ?", {}, $prefix);
         unless ( $similar_stuff->[0] > 1 ) {
             push @news, $body;
         }
