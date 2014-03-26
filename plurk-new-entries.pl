@@ -101,6 +101,7 @@ sub post {
 
 package main;
 use File::Basename 'basename';
+use Digest::SHA1 'sha1_hex';
 use Encode ();
 use DBI;
 
@@ -111,6 +112,17 @@ my $program_name = basename($0);
 say "DEBUG: program_name = $program_name";
 
 my ($dbpath, $plurk_secret) = @ARGV;
+
+my $lockfile = "/tmp/lock_" . sha1_hex(join(";",$0,$dbpath,$plurk_secret));
+if (-f $lockfile) {
+    say "DEBUG: locked. skip this run";
+    exit;
+}
+
+open(my $fh, ">", $lockfile) or die $!;
+say $fh $$;
+close($fh);
+
 my @news;
 
 my $SQL_NOW = q{ strftime('%Y-%m-%dT%H:%M:%SZ', 'now') };
@@ -156,3 +168,6 @@ if (@news) {
 } else {
     say "=== NOTHING TO POST";
 }
+
+unlink($lockfile);
+
