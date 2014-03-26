@@ -8,8 +8,8 @@ use File::Basename 'basename';
 use Mojo::UserAgent;
 use DBI;
 
-@ARGV == 3 or die;
-my ($dbpath, $url, $selector) = @ARGV;
+@ARGV == 2 or die;
+my ($dbpath, $url) = @ARGV;
 
 my $ua = Mojo::UserAgent->new;
 my $tx = $ua->get($url);
@@ -17,8 +17,10 @@ die "download failed" unless $tx->success;
 
 my %seen;
 my $order = 0;
-for my $e ($tx->res->dom->find($selector)->each) {
-    my $text_content = $e->all_text;
+for my $text_content (split /\r?\n/, $tx->res->body) {
+    $text_content =~ s/^\s+//;
+    $text_content =~ s/\s+$//;
+
     my $digest = sha1_hex( encode_utf8($text_content) );
     $seen{$digest} = {
         order => $order++,
@@ -44,4 +46,7 @@ $dbh->commit;
 
 __END__
 
-perl collect-html-diff.pl congress-text-live.sqlite3 http://congress-text-live.herokuapp.com/ 'section.entry'
+cat init.sql | sqlite3 fumao-text-live.sqlite3
+
+perl collect-text-diff.pl fumao-text-live.sqlite3 https://ethercalc.org/static/proxy/live.txt
+
