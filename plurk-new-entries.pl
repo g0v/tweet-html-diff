@@ -114,6 +114,7 @@ my $SQL_NOW = q{ strftime('%Y-%m-%dT%H:%M:%SZ', 'now') };
 my $dbh = DBI->connect("dbi:SQLite:dbname=$dbpath", "", "");
 my $row = $dbh->selectrow_arrayref("select finished FROM runlog WHERE program = ?", {}, basename($0));
 if ($row) {
+    say "DEBUG: Last run was finished at $_->[0]";
     my $rows = $dbh->selectall_arrayref("select body FROM seen WHERE last_seen is NULL OR first_seen > ? ORDER BY first_seen ASC, `order` DESC,", {}, $row->[0]);
     for (@$rows) {
         my $body = Encode::decode_utf8($_->[0]);
