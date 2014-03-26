@@ -135,7 +135,7 @@ if ($row) {
         my $body = Encode::decode_utf8($_->[0]);
         my $prefix = substr($body, 0, 40) . '%';
 
-        my $similar_stuff = $dbh->selectrow_arrayref("SELECT count(sha1) FORM seen WHERE body like ?", {}, $prefix);
+        my $similar_stuff = $dbh->selectrow_arrayref("SELECT count(sha1) FROM seen WHERE body like ?", {}, $prefix);
         unless ( $similar_stuff->[0] > 1 ) {
             push @news, $body;
         }
