@@ -35,7 +35,7 @@ for my $sha1 (keys %seen) {
         $dbh->do("UPDATE seen SET `last_seen` = $SQL_NOW WHERE `sha1` = ?", {}, $sha1);
     }
     else {
-        $dbh->do("INSERT INTO seen(`sha1`,`body`,`first_seen`) VALUES(?,?, $SQL_NOW)", {}, $sha1, $seen{$sha1}->{body});
+        $dbh->do("INSERT INTO seen(`sha1`,`body`,`order`,`first_seen`) VALUES(?,?,?, $SQL_NOW)", {}, $sha1, $seen{$sha1}->{body}, $seen{$sha1}->{order});
     }
 }
 
@@ -44,7 +44,7 @@ $dbh->commit;
 
 __END__
 
-CREATE TABLE seen (`sha1` VARCHAR(40), `body` TEXT, `first_seen` DATETIME, `last_seen` DATETIME, PRIMARY KEY (`sha1`));
+CREATE TABLE seen (`sha1` VARCHAR(40), `body` TEXT, `first_seen` DATETIME, `last_seen` DATETIME, `order` UNSIGNED INT, PRIMARY KEY (`sha1`));
 
 CREATE TABLE runlog (`program` VARCHAR(80), `finished` DATETIME, PRIMARY KEY (`program`));
 INSERT INTO runlog(`program`) VALUES('collect-html-diff.pl');
