@@ -107,26 +107,31 @@ use DBI;
 @ARGV == 2 or die;
 binmode STDOUT, ":utf8";
 
+my $program_name = basename($0);
+say "DEBUG: program_name = $program_name";
+
 my ($dbpath, $plurk_secret) = @ARGV;
 my @news;
 
 my $SQL_NOW = q{ strftime('%Y-%m-%dT%H:%M:%SZ', 'now') };
 my $dbh = DBI->connect("dbi:SQLite:dbname=$dbpath", "", "");
-my $row = $dbh->selectrow_arrayref("select finished FROM runlog WHERE program = ?", {}, basename($0));
+my $row = $dbh->selectrow_arrayref("select finished FROM runlog WHERE program = ?", {}, $program_name);
 if ($row) {
-    say "DEBUG: Last run was finished at $_->[0]";
-    my $rows = $dbh->selectall_arrayref("select body FROM seen WHERE last_seen is NULL OR first_seen > ? ORDER BY first_seen ASC, `order` DESC,", {}, $row->[0]);
+    say "DEBUG: Last run was finished at $row->[0]";
+    my $rows = $dbh->selectall_arrayref("select body FROM seen WHERE last_seen is NULL OR first_seen > ? ORDER BY first_seen ASC, `order` DESC", {}, $row->[0]);
     for (@$rows) {
         my $body = Encode::decode_utf8($_->[0]);
         push @news, $body;
     }
+
 }
 
-$dbh->do("UPDATE runlog SET `finished` = $SQL_NOW WHERE `program` = ?", {}, basename($0));
+$dbh->do("UPDATE runlog SET `finished` = $SQL_NOW WHERE `program` = ?", {}, $program_name);
 $dbh->disconnect;
 
+say "DEBUG: " . scalar(@news) . " new entries to plurk";
+
 if (@news) {
-    say "DEBUG: " . scalar(@news) . " new entries to plurk";
 
     open my $fh, "<", $plurk_secret;
     my ($user, $pass, $hashtag);
