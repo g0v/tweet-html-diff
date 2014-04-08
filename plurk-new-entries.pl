@@ -149,27 +149,31 @@ $dbh->disconnect;
 say "DEBUG: " . scalar(@news) . " new entries to plurk";
 
 if (@news) {
-
     open my $fh, "<", $plurk_secret;
     my ($user, $pass, $hashtag);
     chomp($user = <$fh>);
     chomp($pass = <$fh>);
     chomp($hashtag = <$fh>);
 
-    my $bot = PlurkPoster->new(
-        username => $user,
-        password => $pass,
-        hashtag  => $hashtag,
-    );
-    $bot->login;
+    eval {
+        my $bot = PlurkPoster->new(
+            username => $user,
+            password => $pass,
+            hashtag  => $hashtag,
+        );
+        $bot->login;
 
-    while (@news) {
-        my $text = pop @news;
-        my $id = $bot->post($text);
-        say "DEBUG: plurk id = $id";
-        sleep 10;
-    }
-    say "=== ALL POSTED";
+        while (@news) {
+            my $text = pop @news;
+            my $id = $bot->post($text);
+            say "DEBUG: plurk id = $id";
+            sleep 10;
+        }
+        say "=== ALL POSTED";
+        1;
+    } or do {
+        say "=== SOME ERROR Happened: $@";
+    };
 } else {
     say "=== NOTHING TO POST";
 }
