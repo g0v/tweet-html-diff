@@ -13,7 +13,7 @@ my ($dbpath, $url, $selector) = @ARGV;
 
 my $ua = Mojo::UserAgent->new;
 my $tx = $ua->get($url);
-die "download failed" unless $tx->success;
+die "download failed. ".(join(",",$tx->error)) unless $tx->success;
 
 my %seen;
 my $order = 0;
