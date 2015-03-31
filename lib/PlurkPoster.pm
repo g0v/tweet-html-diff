@@ -56,7 +56,7 @@ sub post {
     my $tx = $ua->get('http://www.plurk.com/m/');
     die "failed 3" unless $tx->success;
 
-    my $user_id = $tx->res->dom("input[name=user_id]")->attr("value");
+    my $user_id = $tx->res->dom->find("input[name=user_id]")->first->attr("value");
 
     $tx = $ua->post('http://www.plurk.com/m/' => form => {
         user_id => $user_id,
@@ -70,9 +70,9 @@ sub post {
     $tx = $ua->get('http://www.plurk.com/m/?mode=my');
     die "failed 5" unless $tx->success;
 
-    my $link_to_plurk = $tx->res->dom->find("div.plurk a.r")->[0];
-    my ($plurk_id) = $link_to_plurk->attr("href") =~ m{/m/p/(.+)$};
-    my $plurk_permaurl = "http://www.plurk.com/" . $link_to_plurk->attr("href");
+    my $link_to_plurk = $tx->res->dom->find("div.plurk[data-pid]")->first;
+    my ($plurk_id) = $link_to_plurk->attr("data-pid");
+    my $plurk_permaurl = "http://www.plurk.com/m/p/${plurk_id}";
 
     say "DEBUG: plurk = $plurk_permaurl";
     while (@content) {
