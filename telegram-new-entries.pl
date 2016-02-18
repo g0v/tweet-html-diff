@@ -55,7 +55,6 @@ $dbh->disconnect;
 
 say "DEBUG: " . scalar(@news) . " new entries to post";
 
-push @news, "Nihao";
 if (@news) {
     open my $fh, "<", $secret;
     my ($token, $chat_id);
