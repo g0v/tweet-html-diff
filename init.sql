@@ -4,3 +4,4 @@ CREATE TABLE runlog (`program` VARCHAR(80), `finished` DATETIME, PRIMARY KEY (`p
 INSERT INTO runlog(`program`) VALUES('collect-text-diff.pl');
 INSERT INTO runlog(`program`) VALUES('collect-html-diff.pl');
 INSERT INTO runlog(`program`) VALUES('plurk-new-entries.pl');
+INSERT INTO runlog(`program`) VALUES('telegram-new-entries.pl');
