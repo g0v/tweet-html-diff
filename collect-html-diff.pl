@@ -6,6 +6,7 @@ use Digest::SHA1 'sha1_hex';
 use Encode 'encode_utf8';
 use File::Basename 'basename';
 use Mojo::UserAgent;
+use URI;
 use DBI;
 
 @ARGV == 3 or die;
@@ -13,16 +14,22 @@ my ($dbpath, $url, $selector) = @ARGV;
 
 my $ua = Mojo::UserAgent->new;
 my $tx = $ua->get($url);
-die "download failed. ".(join(",",$tx->error)) unless $tx->success;
+die "download failed. ".(join(":",$tx->error->{code}, $tx->error->{message})) unless $tx->success;
 
 my %seen;
 my $order = 0;
-for my $e ($tx->res->dom->find($selector)->each) {
-    my $text_content = $e->all_text;
-    my $digest = sha1_hex( encode_utf8($text_content) );
+my $resdom = $tx->res->dom;
+for my $e ($resdom->find($selector)->each) {
+    for my $e2 ( $e, $e->find("*[href]")->each ) {
+        my $u = URI->new_abs( $e2->attr("href"), $url );
+        $e2->attr(href => $u);
+    }
+
+    my $content = $e->to_string;
+    my $digest = sha1_hex( encode_utf8($content) );
     $seen{$digest} = {
         order => $order++,
-        body => $text_content,
+        body => $content,
     };
 }
 
