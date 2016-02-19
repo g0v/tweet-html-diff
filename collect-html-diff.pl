@@ -10,21 +10,34 @@ use URI;
 use DBI;
 use Getopt::Long;
 
-my %args = ( encoding => "utf8" );
+my %args = ( charset => "UTF-8" );
 GetOptions(
     \%args,
-    "encoding=s"
+    "charset=s"
 );
 
 @ARGV == 3 or die;
 my ($dbpath, $url, $selector) = @ARGV;
 
 my $ua = Mojo::UserAgent->new;
-my $tx = $ua->get($url);
+my $tx = $ua->build_tx( GET => $url );
+if ( $args{charset} ne "UTF-8" ) {
+    $tx->res->on(
+        finish => sub {
+            my ($res) = @_;
+            my $ct = $res->headers->header('Content-Type');
+            $ct =~ s/;.*//;
+            $res->headers->header('Content-Type' => "$ct; charset=$args{charset}");
+        }
+    );
+}
+$ua->start($tx);
+
 die "download failed. ".(join(":",$tx->error->{code}, $tx->error->{message})) unless $tx->success;
 
 my %seen;
 my $order = 0;
+
 my $resdom = $tx->res->dom;
 for my $e ($resdom->find($selector)->each) {
     for my $e2 ( $e, $e->find("*[href]")->each ) {
@@ -32,8 +45,6 @@ for my $e ($resdom->find($selector)->each) {
         $e2->attr(href => $u);
     }
     my $content = $e->to_string;
-
-    $content = decode($args{encoding} , $content);
     my $digest = sha1_hex( encode_utf8($content) );
     $seen{$digest} = {
         order => $order++,
