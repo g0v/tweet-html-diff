@@ -7,6 +7,7 @@ use File::Basename 'basename';
 use Digest::SHA1 'sha1_hex';
 use Encode ();
 use DBI;
+use Mojo::DOM;
 
 use FindBin;
 use lib "${FindBin::Bin}/lib";
@@ -68,7 +69,15 @@ if (@news) {
 
     eval {
         while (@news) {
-            my $text = pop @news;
+            my $html = pop @news;
+            my $dom = Mojo::DOM->new($html);
+
+            my $text = $dom->all_text;
+            my $links = $dom->find("a")->map(attr => "href")->join(" ");
+            if ($links) {
+                $text .= " $links";
+            }
+
             $bot->post($text);
             sleep 10;
         }
