@@ -3,11 +3,18 @@ use v5.14;
 use strict;
 use warnings;
 use Digest::SHA1 'sha1_hex';
-use Encode 'encode_utf8';
+use Encode qw< decode encode_utf8 >;
 use File::Basename 'basename';
 use Mojo::UserAgent;
 use URI;
 use DBI;
+use Getopt::Long;
+
+my %args = ( encoding => "utf8" );
+GetOptions(
+    \%args,
+    "encoding=s"
+);
 
 @ARGV == 3 or die;
 my ($dbpath, $url, $selector) = @ARGV;
@@ -24,8 +31,9 @@ for my $e ($resdom->find($selector)->each) {
         my $u = URI->new_abs( $e2->attr("href"), $url );
         $e2->attr(href => $u);
     }
-
     my $content = $e->to_string;
+
+    $content = decode($args{encoding} , $content);
     my $digest = sha1_hex( encode_utf8($content) );
     $seen{$digest} = {
         order => $order++,
