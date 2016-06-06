@@ -51,6 +51,8 @@ $dbh->disconnect;
 say "DEBUG: " . scalar(@news) . " new entries to post";
 
 if (@news) {
+    my %posted;
+
     open my $fh, "<", $secret;
     my ($token, $chat_id);
     chomp($token = <$fh>);
@@ -72,7 +74,10 @@ if (@news) {
                 $text .= " $links";
             }
 
-            $bot->post($text);
+            unless ($posted{$text}) {
+                $bot->post($text);
+                $posted{$text} = 1;
+            }
             sleep 10;
         }
         say "=== ALL POSTED";
