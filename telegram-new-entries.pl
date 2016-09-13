@@ -80,9 +80,10 @@ if (@news) {
 
         my %posted;
         while (my ($links, $text) = each %deduped) {
-            unless ($posted{$text}) {
-                $bot->post($text);
-                $posted{$text} = 1;
+            my $message = "$text $links";
+            unless ($posted{$message}) {
+                $bot->post($message);
+                $posted{$message} = 1;
             }
             sleep 10;
         }
