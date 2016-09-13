@@ -51,8 +51,6 @@ $dbh->disconnect;
 say "DEBUG: " . scalar(@news) . " new entries to post";
 
 if (@news) {
-    my %posted;
-
     open my $fh, "<", $secret;
     my ($token, $chat_id);
     chomp($token = <$fh>);
@@ -63,17 +61,25 @@ if (@news) {
         chat_id => $chat_id,
     );
 
+    my %deduped;
     eval {
         while (@news) {
             my $html = pop @news;
             my $dom = Mojo::DOM->new($html);
 
-            my $text = $dom->all_text;
+            my $text = $dom->all_text; # space-trimmed.
             my $links = $dom->find("a")->map(attr => "href")->join(" ");
-            if ($links) {
-                $text .= " $links";
+            if (exists $deduped{$links}) {
+                if ($text && !$deduped{$links}) {
+                    $deduped{$links} = $text;
+                }
+            } else {
+                $deduped{$links} = $text;
             }
+        }
 
+        my %posted;
+        while (my ($links, $text) = each %deduped) {
             unless ($posted{$text}) {
                 $bot->post($text);
                 $posted{$text} = 1;
