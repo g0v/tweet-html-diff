@@ -68,6 +68,9 @@ if (@news) {
             my $dom = Mojo::DOM->new($html);
 
             my $text = $dom->all_text; # space-trimmed.
+            $text =~ s/\n\n+/\n/gs;
+            $text =~ s/[ \t]+/ /gs;
+
             my $links = $dom->find("a")->map(attr => "href")->join(" ");
             if (exists $deduped{$links}) {
                 if ($text && !$deduped{$links}) {
@@ -80,11 +83,9 @@ if (@news) {
 
         my %posted;
         while (my ($links, $text) = each %deduped) {
-            my $message = "$text $links";
-            unless ($posted{$message}) {
-                $bot->post($message);
-                $posted{$message} = 1;
-            }
+            next if length($text) < 7;
+            my $message = "$text\n$links";
+            $bot->post($message);
             sleep 10;
         }
         say "=== ALL POSTED";
