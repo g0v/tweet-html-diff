@@ -69,7 +69,7 @@ if (@news) {
 
             my $text = $dom->all_text; # space-trimmed.
             $text =~ s/\n\n+/\n/gs;
-            $text =~ s/[ \t]+/ /gs;
+            $text =~ s/[ \t\n]+/ /gs;
 
             my $links = $dom->find("a")->map(attr => "href")->join(" ");
             if (exists $deduped{$links}) {
