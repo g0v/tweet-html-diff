@@ -65,7 +65,13 @@ for my $sha1 (keys %seen) {
     }
 }
 
-$dbh->do("UPDATE runlog SET `finished` = $SQL_NOW WHERE `program` = ?", {}, basename($0));
+my $program = basename($0);
+my $row = $dbh->selectrow_arrayref('SELECT 1 FROM runlog WHERE program = ?', {}, $program);
+if ($row) {
+    $dbh->do("UPDATE runlog SET `finished` = $SQL_NOW WHERE `program` = ?", {}, $program);
+} else {
+    $dbh->do("INSERT INTO runlog(`program`, `finished`) VALUES(?, $SQL_NOW)", {}, $program);
+}
 $dbh->commit;
 
 __END__
