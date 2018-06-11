@@ -24,6 +24,7 @@ my @to_post;
 for my $entry (@{$payload->{news}}) {
     my $url = $entry->{first_link};
     my $text = $entry->{text};
+    next unless length($text) > 7;
     
     my $message = "$url\n\n$text";
     push @to_post, $message;
