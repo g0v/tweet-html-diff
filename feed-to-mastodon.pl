@@ -19,28 +19,12 @@ my $mastodon_secret = do {
 my $_payload = do { local $/; <STDIN> };
 my $payload = JSON::PP->new->utf8->decode($_payload);
 
-my %deduped;
-for (@{$payload->{news}}) {
-    my $html = $_->{body};
-    my $dom = Mojo::DOM->new($html);
-
-    my $text = $dom->all_text;  # space-trimmed.
-    $text =~ s/\n\n+/\n/gs;
-    $text =~ s/[ \t\n]+/ /gs;
-
-    my $links = $dom->find("a")->map(attr => "href")->join(" ");
-    if (exists $deduped{$links}) {
-        if ($text && !$deduped{$links}) {
-            $deduped{$links} = $text;
-        }
-    } else {
-        $deduped{$links} = $text;
-    }    
-}
-
 my @to_post;
-while (my ($url, $text) = each %deduped) {
-    next if length($text) < 7;
+
+for my $entry (@{$payload->{news}}) {
+    my $url = $entry->{first_link};
+    my $text = $entry->{text};
+    
     my $message = "$url\n\n$text";
     push @to_post, $message;
 }

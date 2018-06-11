@@ -8,6 +8,7 @@ use Digest::SHA1 'sha1_hex';
 use Encode 'decode_utf8';
 use DBI;
 use JSON::PP;
+use Mojo::DOM;
 
 @ARGV == 2 or die;
 my ($dbpath, $queue_name) = @ARGV;
@@ -50,6 +51,28 @@ $dbh->do("UPDATE runlog SET `finished` = $SQL_NOW WHERE `program` = ?", {}, $que
 $dbh->disconnect;
 
 unlink($lockfile);
+
+my %deduped;
+for my $entry (@news) {
+    my $html = $entry->{body};
+    my $dom = Mojo::DOM->new($html);
+
+    my $text = $dom->all_text;  # space-trimmed.
+    $text =~ s/\n\n+/\n/gs;
+    $text =~ s/[ \t\n]+/ /gs;
+
+    my @links = @{ $dom->find("a")->map(attr => "href")->to_array };
+    my $links_str = join(" ", @links);
+
+    $entry->{first_link} = $links[0];
+    $entry->{links} = \@links;
+    $entry->{text} = $text;
+
+    unless (exists $deduped{$links_str}) {
+        $deduped{$links_str} = $entry;
+    }
+}
+@news = values %deduped;
 
 say JSON::PP->new->utf8->encode({
     news => \@news
