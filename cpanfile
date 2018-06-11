@@ -6,3 +6,4 @@ requires 'JSON::PP';
 requires 'LWP::Protocol::https';
 requires 'Mastodon::Client';
 requires 'Mojolicious';
+requires 'WWW::Telegram::BotAPI';
