@@ -3,9 +3,23 @@ use v5.26;
 use strict;
 use warnings;
 
+use Getopt::Long 'GetOptions';
 use JSON::PP;
 use Mojo::DOM;
 use Mastodon::Client;
+
+my %opts;
+GetOptions(
+    \%opts,
+    "prefix=s",
+    "suffix=s",
+    "sleep=n",
+);
+$opts{sleep} //= 1;
+$opts{prefix} //= '';
+$opts{suffix} //= '';
+$opts{prefix} =~ s/\n*\z/\n\n/;
+$opts{suffix} =~ s/\A\n*/\n\n/;
 
 @ARGV == 1 or die;
 
@@ -26,7 +40,7 @@ for my $entry (@{$payload->{news}}) {
     my $text = $entry->{text};
     next unless length($text) > 7;
     
-    my $message = "$url\n\n$text";
+    my $message = $opts{prefix} . "$text\n\n$url" . $opts{suffix};
     push @to_post, $message;
 }
 
@@ -44,5 +58,5 @@ for my $text (@to_post) {
         $text,
         { visibility => 'unlisted' }
     );
-    sleep 1;
+    sleep $opts{sleep} if $opts{sleep};
 }
