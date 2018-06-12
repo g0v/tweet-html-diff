@@ -20,6 +20,10 @@ GetOptions(
 my ($dbpath, $url, $selector) = @ARGV;
 
 my $ua = Mojo::UserAgent->new;
+$ua->connect_timeout(30);
+$ua->request_timeout(30);
+$ua->inactivity_timeout(30);
+
 my $tx = $ua->build_tx( GET => $url );
 if ( $args{charset} ne "UTF-8" ) {
     $tx->res->on(
