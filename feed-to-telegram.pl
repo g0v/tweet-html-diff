@@ -38,7 +38,7 @@ my @to_post;
 
 for my $entry (@{$payload->{news}}) {
     my $url = $entry->{first_link};
-    my $text = $entry->{text};
+    my $text = $entry->{text} // '';
     next unless length($text) > 7;
 
     my $message = $opts{prefix} . "$text\n\n$url" . $opts{suffix};
