@@ -17,6 +17,8 @@ GetOptions(
     "prefix=s",
     "suffix=s",
 );
+$args{prefix} = decode_utf8( $args{prefix} // '');
+$args{suffix} = decode_utf8( $args{suffix} // '');
 
 @ARGV == 3 or die;
 my ($dbpath, $url, $selector) = @ARGV;
