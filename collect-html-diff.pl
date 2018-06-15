@@ -13,7 +13,9 @@ use Getopt::Long;
 my %args = ( charset => "UTF-8" );
 GetOptions(
     \%args,
-    "charset=s"
+    "charset=s",
+    "prefix=s",
+    "suffix=s",
 );
 
 @ARGV == 3 or die;
@@ -65,7 +67,7 @@ for my $sha1 (keys %seen) {
         $dbh->do("UPDATE seen SET `last_seen` = $SQL_NOW WHERE `sha1` = ?", {}, $sha1);
     }
     else {
-        $dbh->do("INSERT INTO seen(`sha1`,`body`,`order`,`first_seen`) VALUES(?,?,?, $SQL_NOW)", {}, $sha1, $seen{$sha1}->{body}, $seen{$sha1}->{order});
+        $dbh->do("INSERT INTO seen(`sha1`,`body`,`order`,`first_seen`, `prefix`, `suffix`) VALUES(?,?,?, $SQL_NOW, ?,?)", {}, $sha1, $seen{$sha1}->{body}, $seen{$sha1}->{order}, $args{prefix}//'', $args{suffix}//'');
     }
 }
 
