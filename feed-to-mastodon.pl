@@ -11,15 +11,9 @@ use Mastodon::Client;
 my %opts;
 GetOptions(
     \%opts,
-    "prefix=s",
-    "suffix=s",
     "sleep=n",
 );
 $opts{sleep} //= 1;
-$opts{prefix} //= '';
-$opts{suffix} //= '';
-$opts{prefix} =~ s/\n*\z/\n\n/;
-$opts{suffix} =~ s/\A\n*/\n\n/;
 
 @ARGV == 1 or die;
 
@@ -39,9 +33,10 @@ for my $entry (@{$payload->{news}}) {
     my $url = $entry->{first_link};
     my $text = $entry->{text} // '';
     next unless length($text) > 7;
-    
-    my $message = $opts{prefix} . "$text\n\n$url" . $opts{suffix};
-    push @to_post, $message;
+
+    my $prefix = $entry->{prefix} // '';
+    my $suffix = $entry->{suffix} // '';
+    push @to_post, join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
 }
 
 my $client = Mastodon::Client->new(

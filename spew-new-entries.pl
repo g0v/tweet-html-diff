@@ -37,13 +37,18 @@ if ($row) {
     $time_previous_run = "1970-01-01T00:00:00Z";
 }
 
-my $rows = $dbh->selectall_arrayref("select body,last_seen FROM seen WHERE first_seen > ? ORDER BY first_seen ASC, `order` DESC", {}, $time_previous_run);
-for (@$rows) {
-    my $body = decode_utf8($_->[0]);
-    my $last_seen = $_->[1];
+my $rows = $dbh->selectall_arrayref("select body,last_seen,prefix,suffix FROM seen WHERE first_seen > ? ORDER BY first_seen ASC, `order` DESC", {}, $time_previous_run);
+for my $row (@$rows) {
+    my $body      = decode_utf8($row->[0]);
+    my $last_seen = $row->[1];
+    my $prefix    = decode_utf8($row->[2] //'');
+    my $suffix    = decode_utf8($row->[3] //'');
+
     push @news, {
         last_seen => $last_seen,
-        body => $body
+        body      => $body,
+        prefix    => $prefix,
+        suffix    => $suffix,
     };
 }
 
