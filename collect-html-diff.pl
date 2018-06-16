@@ -3,7 +3,7 @@ use v5.14;
 use strict;
 use warnings;
 use Digest::SHA1 'sha1_hex';
-use Encode qw< decode encode_utf8 >;
+use Encode qw< decode decode_utf8 encode_utf8 >;
 use File::Basename 'basename';
 use Mojo::UserAgent;
 use URI;
