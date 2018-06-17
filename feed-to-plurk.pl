@@ -8,6 +8,7 @@ use Mojo::DOM;
 use Getopt::Long 'GetOptions';
 use OAuth::Lite::Consumer;
 use OAuth::Lite::Token;
+use Encode 'encode_utf8';
 
 my %opts;
 GetOptions(
@@ -37,7 +38,7 @@ for my $entry (@{$payload->{news}}) {
 
     my $prefix = $entry->{prefix} // '';
     my $suffix = $entry->{suffix} // '';
-    push @to_post, join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
+    push @to_post, encode_utf8 join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
 }
 
 my $auth = OAuth::Lite::Consumer->new(
