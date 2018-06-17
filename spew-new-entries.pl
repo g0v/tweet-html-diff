@@ -77,7 +77,7 @@ for my $entry (@news) {
         $deduped{$links_str} = $entry;
     }
 }
-@news = values %deduped;
+@news = grep { length($_->{text}) > 7 } values %deduped;
 
 say JSON::PP->new->utf8->encode({
     news => \@news

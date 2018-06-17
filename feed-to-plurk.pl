@@ -34,7 +34,7 @@ my @to_post;
 for my $entry (@{$payload->{news}}) {
     my $url = $entry->{first_link} // '';
     my $text = $entry->{text} // '';
-    next unless length($text) > 7;
+    next unless length($text) > 0;
 
     my $prefix = $entry->{prefix} // '';
     my $suffix = $entry->{suffix} // '';
