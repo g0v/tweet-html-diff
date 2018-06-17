@@ -52,9 +52,10 @@ my $access_token = OAuth::Lite::Token->new(
     secret => $secret->{access_token_secret},
 );
 
+unshift @to_post, "ping: " . localtime();
 for my $message (@to_post) {
     my $res = $auth->request(
-        method => 'GET',
+        method => 'POST',
         url => 'https://www.plurk.com/APP/Timeline/plurkAdd',
         token => $access_token,
         params => {
