@@ -37,7 +37,11 @@ for my $entry (@{$payload->{news}}) {
 
     my $prefix = $entry->{prefix} // '';
     my $suffix = $entry->{suffix} // '';
-    push @to_post, join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
+    if ($text && $url) {
+        push @to_post, join("\n\n", grep { $_ ne '' } $prefix, "[$text]($url)", $suffix);
+    } else {
+        push @to_post, join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
+    }
 }
 
 my $bot = TelegramPoster->new(

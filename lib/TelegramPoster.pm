@@ -19,6 +19,7 @@ sub post {
     say "POSTING << $content";
     $self->{bot}->api_request(
         sendMessage => {
+            parse_mode => "Markdown",
             chat_id => $self->{chat_id},
             text    => $content
         }
