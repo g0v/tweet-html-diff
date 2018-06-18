@@ -35,10 +35,14 @@ for my $entry (@{$payload->{news}}) {
     my $url = $entry->{first_link} // '';
     my $text = $entry->{text} // '';
     next unless length($text) > 0;
-
     my $prefix = $entry->{prefix} // '';
     my $suffix = $entry->{suffix} // '';
-    push @to_post, encode_utf8 join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
+
+    if ($url) {
+        push @to_post, encode_utf8 join("\n\n", grep { $_ ne '' } ($prefix, ($url . ' (' . $text . ')'), $suffix));
+    } else {
+        push @to_post, encode_utf8 join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
+    }
 }
 
 my $auth = OAuth::Lite::Consumer->new(
