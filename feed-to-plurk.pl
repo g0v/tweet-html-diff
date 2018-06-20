@@ -33,10 +33,23 @@ my @to_post;
 
 my @news = sort { $a->{text} cmp $b->{text} } grep { $_->{text} } @{$payload->{news}};
 
+$news[0]{_squash_text_length} = length($news[0]{text});
+for (my $i = 1; $i < @news; $i++) {
+    my $len = $news[$i-1]{_squash_text_length} + length($news[$i]{text});
+    if ((substr($news[$i-1]{text}, 0, 3) eq substr($news[$i]{text}, 0, 3)) && ($len < 200)) {
+        $news[$i]{_squash} = 1;
+        $news[$i]{_squash_text_length} = $len;
+    } else {
+        $news[$i]{_squash} = 0;
+        $news[$i]{_squash_text_length} = length($news[$i]{text});
+    }
+}
+
 for my $entry (@news) {
     my $url = $entry->{first_link} // '';
     my $prefix = $entry->{prefix} // '';
     my $suffix = $entry->{suffix} // '';
+    my $text = $entry->{text};
 
     if ($url) {
         # Converting half-width parenthesis to be full-width.
@@ -44,9 +57,19 @@ for my $entry (@news) {
         $text =~ s/\(/\x{FF08}/g;
         $text =~ s/\)/\x{FF09}/g;
 
-        push @to_post, encode_utf8 join("\n\n", grep { $_ ne '' } ($prefix, ($url . ' (' . $text . ')'), $suffix));
+        my $msg = encode_utf8 join(" ", grep { $_ ne '' } ($prefix, ($url . ' (' . $text . ')'), $suffix));
+        if ($entry->{_squash}) {
+            $to_post[-1] .= "\n\n" . $msg;
+        }  else {
+            push @to_post, $msg;
+        }
     } else {
-        push @to_post, encode_utf8 join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
+        my $msg = encode_utf8 join(" ", grep { $_ ne '' } ($prefix, $text, $suffix));
+        if ($entry->{_squash}) {
+            $to_post[-1] .= "\n\n" . $msg;
+        }  else {
+            push @to_post, $msg;
+        }
     }
 }
 
