@@ -31,14 +31,19 @@ my $payload = JSON::PP->new->utf8->decode($_payload);
 
 my @to_post;
 
-for my $entry (@{$payload->{news}}) {
+my @news = sort { $a->{text} cmp $b->{text} } grep { $_->{text} } @{$payload->{news}};
+
+for my $entry (@news) {
     my $url = $entry->{first_link} // '';
-    my $text = $entry->{text} // '';
-    next unless length($text) > 0;
     my $prefix = $entry->{prefix} // '';
     my $suffix = $entry->{suffix} // '';
 
     if ($url) {
+        # Converting half-width parenthesis to be full-width.
+        # Because half-width parenthesis is used to label link.
+        $text =~ s/\(/\x{FF08}/g;
+        $text =~ s/\)/\x{FF09}/g;
+
         push @to_post, encode_utf8 join("\n\n", grep { $_ ne '' } ($prefix, ($url . ' (' . $text . ')'), $suffix));
     } else {
         push @to_post, encode_utf8 join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
