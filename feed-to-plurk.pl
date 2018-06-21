@@ -36,7 +36,7 @@ my @news = sort { $a->{text} cmp $b->{text} } grep { $_->{text} } @{$payload->{n
 $news[0]{_squash_text_length} = length($news[0]{text});
 for (my $i = 1; $i < @news; $i++) {
     my $len = $news[$i-1]{_squash_text_length} + length($news[$i]{text});
-    if ((substr($news[$i-1]{text}, 0, 3) eq substr($news[$i]{text}, 0, 3)) && ($len < 200)) {
+    if ((substr($news[$i-1]{text}, 0, 2) eq substr($news[$i]{text}, 0, 2)) && ($len < 200)) {
         $news[$i]{_squash} = 1;
         $news[$i]{_squash_text_length} = $len;
     } else {
