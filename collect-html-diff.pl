@@ -36,6 +36,9 @@ if ( $args{charset} ne "UTF-8" ) {
             my $ct = $res->headers->header('Content-Type');
             $ct =~ s/;.*//;
             $res->headers->header('Content-Type' => "$ct; charset=$args{charset}");
+
+            my $body_new = decode($args{charset}, $tx->res->body);
+            $tx->res->body($body_new);
         }
     );
 }
