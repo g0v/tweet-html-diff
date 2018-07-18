@@ -10,11 +10,7 @@ use OAuth::Lite::Consumer;
 use OAuth::Lite::Token;
 use Encode 'encode_utf8';
 
-sub take_front_keyword {
-    my ($str) = @_;
-    my @two_letters = $str =~ m/\A \P{Letter}* (\p{Letter}) \P{Letter}* (\p{Letter})/x;
-    return join "", @two_letters;
-}
+use StringUtils qw(take_front_keyword);
 
 # main
 my %opts;
