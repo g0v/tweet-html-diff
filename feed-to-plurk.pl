@@ -10,10 +10,18 @@ use OAuth::Lite::Consumer;
 use OAuth::Lite::Token;
 use Encode 'encode_utf8';
 
+sub take_front_keyword {
+    my ($str) = @_;
+    my @two_letters = $str =~ m/\A \P{Letter}* (\p{Letter}) \P{Letter}* (\p{Letter})/x;
+    return join "", @two_letters;
+}
+
+# main
 my %opts;
 GetOptions(
     \%opts,
     "sleep=n",
+    "n|dry-run",
 );
 $opts{sleep}  //= 5;
 
@@ -31,12 +39,21 @@ my $payload = JSON::PP->new->utf8->decode($_payload);
 
 my @to_post;
 
-my @news = sort { $a->{text} cmp $b->{text} } grep { $_->{text} } @{$payload->{news}};
+my @news = sort {
+    $a->{keyword} cmp $b->{keyword}
+} map {
+    +{ keyword => take_front_keyword($_->{text}),
+       news    => $_ }
+} grep { defined($_->{text}) } @{$payload->{news}};
 
-$news[0]{_squash_text_length} = length($news[0]{text});
+$news[0]{_squash_text_length} = length($news[0]{news}{text});
 for (my $i = 1; $i < @news; $i++) {
-    my $len = $news[$i-1]{_squash_text_length} + length($news[$i]{text});
-    if ((substr($news[$i-1]{text}, 0, 2) eq substr($news[$i]{text}, 0, 2)) && ($len < 200)) {
+    my $len = $news[$i-1]{_squash_text_length} + length($news[$i]{news}{text});
+
+    my $k_this = $news[$i]{keyword};
+    my $k_prev = $news[$i-1]{keyword};
+
+    if (($k_this eq $k_prev) && ($len < 200)) {
         $news[$i]{_squash} = 1;
         $news[$i]{_squash_text_length} = $len;
     } else {
@@ -46,10 +63,10 @@ for (my $i = 1; $i < @news; $i++) {
 }
 
 for my $entry (@news) {
-    my $url = $entry->{first_link} // '';
-    my $prefix = $entry->{prefix} // '';
-    my $suffix = $entry->{suffix} // '';
-    my $text = $entry->{text};
+    my $url = $entry->{news}{first_link} // '';
+    my $prefix = $entry->{news}{prefix} // '';
+    my $suffix = $entry->{news}{suffix} // '';
+    my $text = $entry->{news}{text};
 
     if ($url) {
         # Converting half-width parenthesis to be full-width.
@@ -83,6 +100,13 @@ my $access_token = OAuth::Lite::Token->new(
     token => $secret->{access_token},
     secret => $secret->{access_token_secret},
 );
+
+if ($opts{n}) {
+    for my $message (@to_post) {
+        print ">>> $message\n";
+    }
+    exit(0);
+}
 
 for my $message (@to_post) {
     my $res = $auth->request(
