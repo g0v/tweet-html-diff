@@ -13,6 +13,7 @@ my %opts;
 GetOptions(
     \%opts,
     "sleep=n",
+    "n|dry-run",
 );
 $opts{sleep}  //= 5;
 
@@ -48,6 +49,13 @@ my $bot = TelegramPoster->new(
     token   => $secret->{token},
     chat_id => $secret->{chat_id},
 );
+
+if ($opts{n}) {
+    for my $message (@to_post) {
+        print ">>> $message\n";
+    }
+    exit(0);
+}
 
 for my $message (@to_post) {
     $bot->post($message);
