@@ -2,7 +2,9 @@
 use v5.26;
 use strict;
 use warnings;
+use charnames ':full';
 
+use List::Util qw(sum0);
 use JSON::PP;
 use Mojo::DOM;
 use Getopt::Long 'GetOptions';
@@ -35,55 +37,66 @@ my $payload = JSON::PP->new->utf8->decode($_payload);
 
 my @to_post;
 
-my @news = sort {
-    $a->{keyword} cmp $b->{keyword}
-} map {
-    +{ keyword => take_front_keyword($_->{text}),
-       news    => $_ }
-} grep { defined($_->{text}) } @{$payload->{news}};
-
-$news[0]{_squash_text_length} = length($news[0]{news}{text});
-for (my $i = 1; $i < @news; $i++) {
-    my $len = $news[$i-1]{_squash_text_length} + length($news[$i]{news}{text});
-
-    my $k_this = $news[$i]{keyword};
-    my $k_prev = $news[$i-1]{keyword};
-
-    if (($k_this eq $k_prev) && ($len < 200)) {
-        $news[$i]{_squash} = 1;
-        $news[$i]{_squash_text_length} = $len;
-    } else {
-        $news[$i]{_squash} = 0;
-        $news[$i]{_squash_text_length} = length($news[$i]{text});
-    }
+my %news_bucket;
+for my $entry (grep { defined($_->{text}) && $_->{text} =~ m/\p{Letter}/ } @{$payload->{news}}) {
+    my $keyword = take_front_keyword($entry->{text});
+    push @{$news_bucket{$keyword}}, $entry;
 }
 
-for my $entry (@news) {
-    my $url = $entry->{news}{first_link} // '';
-    my $prefix = $entry->{news}{prefix} // '';
-    my $suffix = $entry->{news}{suffix} // '';
-    my $text = $entry->{news}{text};
 
-    if ($url) {
-        # Converting half-width parenthesis to be full-width.
-        # Because half-width parenthesis is used to label link.
-        $text =~ s/\(/\x{FF08}/g;
-        $text =~ s/\)/\x{FF09}/g;
+my @sub_buckets;
+for my $k (keys %news_bucket) {
+    my $bucket = $news_bucket{$k};
+    next if sum0(map { length($_->{text}) } @$bucket) <= 200;
 
-        my $msg = encode_utf8 join(" ", grep { $_ ne '' } ($prefix, ($url . ' (' . $text . ')'), $suffix));
-        if ($entry->{_squash}) {
-            $to_post[-1] .= "\n\n" . $msg;
-        }  else {
-            push @to_post, $msg;
-        }
-    } else {
-        my $msg = encode_utf8 join(" ", grep { $_ ne '' } ($prefix, $text, $suffix));
-        if ($entry->{_squash}) {
-            $to_post[-1] .= "\n\n" . $msg;
-        }  else {
-            push @to_post, $msg;
+    my @bucket2;
+    my $length_bucket2 = 0;
+    my $i = 0;
+    while (sum0(map { length($_->{text}) } @$bucket) > 200) {
+        my $entry = pop @$bucket;
+        if (length($entry->{text}) + $length_bucket2 > 200) {
+            push @sub_buckets, [ "$k:" . ($i++),  [@bucket2] ];
+            @bucket2 = ();
+        } else {
+            push @bucket2, $entry;
+            $length_bucket2 += length($entry->{text});
         }
     }
+}
+for my $x (@sub_buckets) {
+    $news_bucket{$x->[0]} = $x->[1];
+}
+
+for my $bucket (values %news_bucket) {
+    my $msg = "";
+    for my $entry (@$bucket) {
+        my $url = $entry->{first_link} // '';
+        my $prefix = $entry->{prefix} // '';
+        my $suffix = $entry->{suffix} // '';
+        my $text = $entry->{text};
+
+        $text =~ s/\(/\x{FF08}/g;
+        $text =~ s/\)/\x{FF09}/g;
+        $msg .= "\n\n\N{BULLET} " . (
+            $url
+            ? join(" ", grep { $_ ne '' } ($prefix, ($url . ' (' . $text . ')'), $suffix))
+            : join(" ", grep { $_ ne '' } ($prefix, $text, $suffix))
+        );
+    }
+    next unless $msg;
+    if (@$bucket == 1) {
+        $msg =~ s/\A\n\n\N{BULLET} //s;
+    } else {
+        $msg =~ s/\A\n\n//s;
+    }
+    push @to_post, encode_utf8($msg);
+}
+
+if ($opts{n}) {
+    for my $message (@to_post) {
+        print "$message\n--------\n";
+    }
+    exit(0);
 }
 
 my $auth = OAuth::Lite::Consumer->new(
@@ -96,13 +109,6 @@ my $access_token = OAuth::Lite::Token->new(
     token => $secret->{access_token},
     secret => $secret->{access_token_secret},
 );
-
-if ($opts{n}) {
-    for my $message (@to_post) {
-        print ">>> $message\n";
-    }
-    exit(0);
-}
 
 for my $message (@to_post) {
     my $res = $auth->request(
