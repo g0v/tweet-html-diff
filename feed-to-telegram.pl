@@ -39,9 +39,15 @@ for my $entry (@{$payload->{news}}) {
     my $prefix = $entry->{prefix} // '';
     my $suffix = $entry->{suffix} // '';
     if ($text && $url) {
-        push @to_post, join("\n\n", grep { $_ ne '' } $prefix, "[$text]($url)", $suffix);
+        push @to_post, {
+            parse_mode => "Markdown",
+            text => join("\n\n", grep { $_ ne '' } $prefix, "[\x{1F517}OPEN\x{2197}]($url)" . " " . $text, $suffix),
+        };
     } else {
-        push @to_post, join("\n\n", grep { $_ ne '' } $prefix, $text, $url, $suffix);
+        push @to_post, {
+            parse_mode => "Markdown",
+            text => join("\n\n", grep { $_ ne '' } $prefix, $text, $suffix),
+        };
     }
 }
 
@@ -58,6 +64,6 @@ if ($opts{n}) {
 }
 
 for my $message (@to_post) {
-    $bot->post($message);
+    $bot->sendMessage($message);
     sleep $opts{sleep} if $opts{sleep};
 }
