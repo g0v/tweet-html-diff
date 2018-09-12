@@ -41,7 +41,13 @@ for my $entry (@{$payload->{news}}) {
     if ($text && $url) {
         push @to_post, {
             parse_mode => "Markdown",
-            text => join("\n\n", grep { $_ ne '' } $prefix, "[\x{1F517}OPEN\x{2197}]($url)" . " " . $text, $suffix),
+            text => join("\n\n", grep { $_ ne '' } $prefix, $text, $suffix),
+            reply_markup => {
+                inline_keyboard => [[{
+                    text => "\x{1F517} OPEN",
+                    url => $url,
+                }]]
+            }
         };
     } else {
         push @to_post, {
