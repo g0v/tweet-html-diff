@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
 use v5.18;
-use strict;
 use warnings;
 
 use File::Basename 'basename';
@@ -63,6 +62,8 @@ for my $entry (@news) {
     my $dom = Mojo::DOM->new($html);
 
     my $text = $dom->all_text;  # space-trimmed.
+
+    $text =~ s/(\r\n)/\n/gs;
     $text =~ s/\n\n+/\n/gs;
     $text =~ s/[ \t\n]+/ /gs;
 
