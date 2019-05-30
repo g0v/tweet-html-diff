@@ -43,6 +43,14 @@ for my $entry (grep { defined($_->{text}) && $_->{text} =~ m/\p{Letter}/ } @{$pa
     push @{$news_bucket{$keyword}}, $entry;
 }
 
+for my $k (keys %news_bucket) {
+    if (@{$news_bucket{$k}} == 1) {
+        my $entry = $news_bucket{$k}[0];
+        delete($news_bucket{$k});
+        my $k2 = take_back_keyword( $entry->{text} );
+        push @{$news_bucket{$k2}}, $entry;
+    }
+}
 
 my @sub_buckets;
 for my $k (keys %news_bucket) {
