@@ -12,7 +12,7 @@ use OAuth::Lite::Consumer;
 use OAuth::Lite::Token;
 use Encode 'encode_utf8';
 
-use StringUtils qw(take_front_keyword);
+use StringUtils qw(take_front_keyword take_back_keyword);
 
 # main
 my %opts;
