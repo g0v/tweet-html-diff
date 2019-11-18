@@ -30,17 +30,18 @@ by doing this:
 
 ## Setup: cronjobs
 
-There are 2 kinds of jobs, one who collect new corpus, the other who figures out what's "new" and post the new content to a notification channel.
+Programs are split into 3 kinds of roles, one who collect new corpus, one who figures out what are new entries, the other who post something to a notification channel.
 
 These are the ones that collect new corpus
 
 - collect-html-diff.pl
 - collect-text-diff.pl
 
-In crontab:
+The one that derives what are new entries:
 
-    */15 * * * * perl -Mlib=/app/tweet-html-diff/local/lib/perl5 /app/tweet-html-diff/collect-html-diff.pl 
-These are the ones that sends notifications
+- spew-new-entries
+
+The ones that post entries to a notification channel
 
 - feed-to-console.pl
 - feed-to-feedro.pl
@@ -48,4 +49,7 @@ These are the ones that sends notifications
 - feed-to-plurk.pl
 - feed-to-telegram.pl
 
- 
+In crontab:
+
+    */15 * * * * perl -Mlib=/app/tweet-html-diff/local/lib/perl5 /app/tweet-html-diff/collect-html-diff.pl
+
