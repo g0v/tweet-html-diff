@@ -50,7 +50,7 @@ if ( $args{charset} ne "UTF-8" ) {
 }
 $ua->start($tx);
 
-die "download failed. url=${url} ".(join(":",$tx->error->{code} // '(unknown code)', $tx->error->{message} //'(unknonw message)')) unless $tx->success;
+die "download failed. url=${url} ".(join(":",$tx->error->{code} // '(unknown code)', $tx->error->{message} //'(unknonw message)')) if $tx->error;
 
 my %seen;
 my $order = 0;
