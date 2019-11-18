@@ -13,6 +13,7 @@ use Getopt::Long;
 my %args = ( charset => "UTF-8" );
 GetOptions(
     \%args,
+    "help|h",
     "charset=s",
     "prefix=s",
     "suffix=s",
@@ -20,7 +21,12 @@ GetOptions(
 $args{prefix} = decode_utf8( $args{prefix} // '');
 $args{suffix} = decode_utf8( $args{suffix} // '');
 
-@ARGV == 3 or die;
+(@ARGV != 3 || $args{help}) and die <<USAGE;
+Usage:
+
+    collect-html-diff.pl /path/to/db.sqlite3 'https://example.com' 'a[href^=/article]'
+USAGE
+
 my ($dbpath, $url, $selector) = @ARGV;
 
 my $ua = Mojo::UserAgent->new;
