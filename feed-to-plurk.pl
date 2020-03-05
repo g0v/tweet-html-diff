@@ -104,7 +104,7 @@ for my $k_bucket (keys %news_bucket) {
     } else {
         $msg =~ s/\A\n\n//s;
     }
-    push @to_post, encode_utf8("# $k_bucket\n" . $msg);
+    push @to_post, encode_utf8($msg);
 }
 
 if ($opts{n}) {
