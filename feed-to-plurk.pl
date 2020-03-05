@@ -52,6 +52,12 @@ for my $k (keys %news_bucket) {
     }
 }
 
+for my $k (grep { @{$news_bucket{$_}} == 1 } keys %news_bucket) {
+    my $entry = $news_bucket{$k}[0];
+    delete $news_bucket{$k};
+    push @{$news_bucket{"0"}}, $entry;
+}
+
 my @sub_buckets;
 for my $k (keys %news_bucket) {
     my $bucket = $news_bucket{$k};
@@ -75,7 +81,8 @@ for my $x (@sub_buckets) {
     $news_bucket{$x->[0]} = $x->[1];
 }
 
-for my $bucket (values %news_bucket) {
+for my $k_bucket (keys %news_bucket) {
+    my $bucket = $news_bucket{$k_bucket};
     my $msg = "";
     for my $entry (@$bucket) {
         my $url = $entry->{first_link} // '';
@@ -97,7 +104,7 @@ for my $bucket (values %news_bucket) {
     } else {
         $msg =~ s/\A\n\n//s;
     }
-    push @to_post, encode_utf8($msg);
+    push @to_post, encode_utf8("# $k_bucket\n" . $msg);
 }
 
 if ($opts{n}) {
