@@ -61,12 +61,12 @@ for my $k (grep { @{$news_bucket{$_}} == 1 } keys %news_bucket) {
 my @sub_buckets;
 for my $k (keys %news_bucket) {
     my $bucket = $news_bucket{$k};
-    next if sum0(map { length($_->{text}) } @$bucket) <= 200;
+    next if sum0(map { length($_->{text}) } @$bucket) <= 300;
 
     my @bucket2;
     my $length_bucket2 = 0;
     my $i = 0;
-    while (sum0(map { length($_->{text}) } @$bucket) > 200) {
+    while (sum0(map { length($_->{text}) } @$bucket) > 300) {
         my $entry = pop @$bucket;
         if (length($entry->{text}) + $length_bucket2 > 200) {
             push @sub_buckets, [ "$k:" . ($i++),  [@bucket2] ];
